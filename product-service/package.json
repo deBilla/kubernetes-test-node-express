@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx ts-node src/app.ts",
-    "start": "node dist/app.js",
+    "start": "tsc && node dist/app.js",
     "build": "tsc",
     "clean:deep": "rm -rf dist node_modules yarn.lock",
     "test": "echo \"Error: no test specified\" && exit 1"
