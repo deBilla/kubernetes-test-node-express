@@ -1,0 +1,58 @@
+name: CI/CD for Microservices
+
+on:
+  push:
+    branches:
+      - master  # Change to your main branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Login to Docker Hub (or your Docker registry)
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      # Build your Docker image
+      - name: Build Docker image
+        run: docker build -t your-docker-image:latest .
+
+      # Push the Docker image to the registry
+      - name: Push Docker image
+        run: docker push your-docker-image:latest
+
+      # Set up Minikube
+      - name: Set up Minikube
+        run: |
+          minikube start
+          minikube kubectl -- get pods -n kube-system
+
+      # Deploy your Kubernetes resources (use kubectl apply or Helm charts)
+      - name: Deploy microservices
+        run: |
+          kubectl apply -f path/to/user-watch-history-deployment.yaml
+          kubectl apply -f path/to/media-catalog-deployment.yaml
+          # Repeat for other microservices
+
+      # Wait for the deployments to stabilize
+      - name: Wait for deployments to stabilize
+        run: kubectl rollout status deployment/user-watch-history -n your-namespace  # Replace with your namespace
+
+      # Expose a service for testing on a specific port (e.g., port 8080)
+      - name: Expose service for testing
+        run: kubectl port-forward svc/user-watch-history-service -n your-namespace 8080:80 &
+
+      # Test the service on the specified port (e.g., using curl or any testing tool)
+      - name: Test microservices
+        run: |
+          curl -f http://localhost:8080/health || exit 1
+
+      # Stop the port-forwarding process
+      - name: Stop port-forwarding
+        run: pkill -f "kubectl port-forward"
+      
+  # Add more workflow stages as needed, such as deploying to production, notifications, etc.
