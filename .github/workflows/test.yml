@@ -3,7 +3,7 @@ name: CI/CD for Microservices
 on:
   push:
     branches:
-      - master  # Change to your main branch name
+      - main  # Change to your main branch name
 
 jobs:
   deploy:
