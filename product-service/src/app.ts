@@ -1,6 +1,6 @@
 import express from "express";
 import { ConnectOptions, connect } from "mongoose";
-import bodyParser from 'body-parser';
+import bodyParser from "body-parser";
 import { configDotenv } from "dotenv";
 import productRouter from "./routes/ProductRoute";
 configDotenv();
