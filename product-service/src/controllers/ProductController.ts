@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import Product, { IProduct } from "../models/Product";
+import { IProduct } from "../models/Product";
 import { ProductRepository } from "../repositories/ProductRepository";
 
 export class ProductController {
