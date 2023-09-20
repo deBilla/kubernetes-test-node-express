@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { CartController } from "../controllers/CartController";
-import { ICart } from "../models/Cart";
+import { ICart, IItem } from "../models/Cart";
 import { Types } from "mongoose";
 
 const cartRouter = express.Router();
@@ -21,8 +21,25 @@ cartRouter.post(
   }
 );
 
+cartRouter.put(
+  "/addItem/:cartId",
+  async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const item: IItem = req.body;
+      const cartId = req.params.cartId;
+      const id = new Types.ObjectId(cartId);
+      console.log(req.body);
+      const savedCart = await cartController.addItemToCart(item, id);
+      return res.status(201).json(savedCart);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json(error);
+    }
+  }
+);
+
 cartRouter.get(
-  "/:customerId?",
+  "/:cartId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
       const cartId = req.params.cartId;

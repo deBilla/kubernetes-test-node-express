@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { ICart } from "../models/Cart";
+import { ICart, IItem } from "../models/Cart";
 import { CartRepository } from "../repositories/CartRepository";
 import * as amqp from "amqplib";
 
@@ -8,10 +8,16 @@ export class CartController {
   constructor() {
     this.repo = new CartRepository();
   }
+
   saveCart = async (cart: ICart) => {
     const newCart = await this.repo.save(cart);
-    await this.publishCartCreatedEvent(cart);
     return newCart;
+  };
+
+  addItemToCart = async (item: IItem, cartId: Types.ObjectId) => {
+    const cart = this.viewCartById(cartId);
+    await this.publishCartCreatedEvent(item);
+    return cart;
   };
 
   viewAllcarts = async () => {
@@ -22,7 +28,7 @@ export class CartController {
     return await this.repo.viewById(id);
   };
 
-  publishCartCreatedEvent = async (cart: ICart) => {
+  publishCartCreatedEvent = async (item: IItem) => {
     try {
       const connection = await amqp.connect(
         `amqp://${process.env.rabbitMQHost}`
@@ -30,7 +36,7 @@ export class CartController {
       const channel = await connection.createChannel();
 
       const exchangeName = "cart_exchange";
-      const message = `Cart Created !!! ${JSON.stringify(cart)}`;
+      const message = JSON.stringify(item);
 
       await channel.assertExchange(exchangeName, "fanout", { durable: false });
       channel.publish(exchangeName, "", Buffer.from(message));

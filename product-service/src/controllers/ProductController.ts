@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { IProduct } from "../models/Product";
+import { IItem, IProduct } from "../models/Product";
 import { ProductRepository } from "../repositories/ProductRepository";
 import * as amqp from "amqplib";
 
@@ -33,12 +33,24 @@ export class ProductController {
 
     channel.consume(
       queue.queue,
-      (message) => {
+      (message: any) => {
+        if (!message) return;
+        const item: IItem = JSON.parse(message.content);
+        this.processCartChange(item);
         console.log(
-          `Received: ${message ? message.content.toString() : "err"}`
+          `Received: ${message.content.toString()}`
         );
       },
       { noAck: true }
     );
   };
+
+  viewProductByUuid = async (uuid: string) => {
+    return await this.repo.viewByUuid(uuid);
+  };
+
+  private processCartChange = async (item: IItem) => {
+    const productArray = await this.viewProductByUuid(item.uuid);
+    console.log(productArray);
+  }
 }

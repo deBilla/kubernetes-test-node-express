@@ -7,6 +7,13 @@ export interface IProduct {
   stock: number;
 }
 
+export interface IItem {
+  uuid: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 const productSchema = new Schema<IProduct>({
   uuid: { type: String, required: true },
   name: { type: String, required: true },
