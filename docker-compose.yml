@@ -1,0 +1,61 @@
+version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: my-rabbit
+    volumes:
+        - ./rabbitmq/etc/definitions.json:/etc/rabbitmq/defu.json
+        - ./rabbitmq/etc/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+        - ./rabbitmq/data:/var/lib/rabbitmq/mnesia/rabbit@my-rabbit
+        - ./rabbitmq/logs:/var/log/rabbitmq/log
+    ports:
+        - 5672:5672
+        - 15672:15672
+    networks:
+      - monorepo_network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+
+  cart-service:
+    build:
+      context: ./cart-service
+    ports:
+      - "8001:3003"
+    networks:
+      - monorepo_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  customer-service:
+    build:
+      context: ./customer-service
+    ports:
+      - "8002:3004"
+    networks:
+      - monorepo_network
+
+  order-service:
+    build:
+      context: ./order-service
+    ports:
+      - "8003:3005"
+    networks:
+      - monorepo_network
+
+  product-service:
+    build:
+      context: ./product-service
+    ports:
+      - "8004:3006"
+    networks:
+      - monorepo_network
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+networks:
+  monorepo_network:

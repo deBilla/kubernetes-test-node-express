@@ -21,10 +21,10 @@ export class CartController {
   };
 
   publishCartCreatedEvent = async () => {
-    const connection = await amqp.connect("amqp://localhost");
+    const connection = await amqp.connect(`amqp://${process.env.rabbitMQHost}`);
     const channel = await connection.createChannel();
 
-    const exchangeName = "my_exchange";
+    const exchangeName = "cart_exchange";
     const message = "Hello, RabbitMQ!";
 
     await channel.assertExchange(exchangeName, "fanout", { durable: false });
@@ -37,11 +37,11 @@ export class CartController {
     }, 500);
   };
 
-  receiveEvent = async () => {
-    const connection = await amqp.connect("amqp://localhost");
+  cartEventConsume = async () => {
+    const connection = await amqp.connect(`amqp://${process.env.rabbitMQHost}`);
     const channel = await connection.createChannel();
 
-    const exchangeName = "my_exchange";
+    const exchangeName = "cart_exchange";
 
     await channel.assertExchange(exchangeName, "fanout", { durable: false });
 

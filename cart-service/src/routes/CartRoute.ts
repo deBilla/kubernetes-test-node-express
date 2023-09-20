@@ -27,7 +27,6 @@ cartRouter.get(
     try {
       const cartId = req.params.cartId;
       await cartController.publishCartCreatedEvent();
-      await cartController.receiveEvent();
       if (cartId) {
         const id = new Types.ObjectId(cartId);
         const product = await cartController.viewCartById(id);
