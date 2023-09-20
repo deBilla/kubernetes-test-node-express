@@ -9,7 +9,9 @@ export class CartController {
     this.repo = new CartRepository();
   }
   saveCart = async (cart: ICart) => {
-    return await this.repo.save(cart);
+    const newCart = await this.repo.save(cart);
+    await this.publishCartCreatedEvent(cart);
+    return newCart;
   };
 
   viewAllcarts = async () => {
@@ -20,40 +22,25 @@ export class CartController {
     return await this.repo.viewById(id);
   };
 
-  publishCartCreatedEvent = async () => {
-    const connection = await amqp.connect(`amqp://${process.env.rabbitMQHost}`);
-    const channel = await connection.createChannel();
+  publishCartCreatedEvent = async (cart: ICart) => {
+    try {
+      const connection = await amqp.connect(
+        `amqp://${process.env.rabbitMQHost}`
+      );
+      const channel = await connection.createChannel();
 
-    const exchangeName = "cart_exchange";
-    const message = "Hello, RabbitMQ!";
+      const exchangeName = "cart_exchange";
+      const message = `Cart Created !!! ${JSON.stringify(cart)}`;
 
-    await channel.assertExchange(exchangeName, "fanout", { durable: false });
-    channel.publish(exchangeName, "", Buffer.from(message));
+      await channel.assertExchange(exchangeName, "fanout", { durable: false });
+      channel.publish(exchangeName, "", Buffer.from(message));
 
-    console.log(`Sent: ${message}`);
-    setTimeout(async () => {
-      await connection.close();
-      process.exit(0);
-    }, 500);
-  };
-
-  cartEventConsume = async () => {
-    const connection = await amqp.connect(`amqp://${process.env.rabbitMQHost}`);
-    const channel = await connection.createChannel();
-
-    const exchangeName = "cart_exchange";
-
-    await channel.assertExchange(exchangeName, "fanout", { durable: false });
-
-    const queue = await channel.assertQueue("", { exclusive: true });
-    await channel.bindQueue(queue.queue, exchangeName, "");
-
-    channel.consume(
-      queue.queue,
-      (message) => {
-        console.log(`Received: ${message ? message.content.toString() : 'err'}`);
-      },
-      { noAck: true }
-    );
+      console.log(`Sent: ${message}`);
+      setTimeout(async () => {
+        await connection.close();
+      }, 500);
+    } catch (e) {
+      console.log(e);
+    }
   };
 }
