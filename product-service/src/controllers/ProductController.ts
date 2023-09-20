@@ -45,12 +45,9 @@ export class ProductController {
     );
   };
 
-  viewProductByUuid = async (uuid: string) => {
-    return await this.repo.viewByUuid(uuid);
-  };
-
   private processCartChange = async (item: IItem) => {
-    const productArray = await this.viewProductByUuid(item.uuid);
+    const id = new Types.ObjectId(item.productId);
+    const productArray = await this.viewProductById(id);
     console.log(productArray);
   }
 }

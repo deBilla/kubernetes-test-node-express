@@ -18,8 +18,4 @@ export class ProductRepository {
   viewById = async (id: Types.ObjectId) => {
     return await Product.findById(id);
   };
-
-  viewByUuid = async (uuid: string) => {
-    return await Product.find({uuid: uuid});
-  };
 }

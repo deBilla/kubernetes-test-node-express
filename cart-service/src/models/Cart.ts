@@ -6,20 +6,20 @@ export interface ICart {
 }
 
 export interface IItem {
-  uuid: string;
   name: string;
   price: number;
   quantity: number;
+  productId: string;
 }
 
 const cartSchema = new Schema<ICart>({
-  uuid: { type: String, required: true },
   items: [
     {
       uuid: { type: String, required: true },
       name: { type: String, required: true },
       price: { type: Number, required: true },
       quantity: { type: Number },
+      productId: { type: String },
     },
   ],
 });
