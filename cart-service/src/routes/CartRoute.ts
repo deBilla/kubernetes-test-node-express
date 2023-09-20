@@ -22,7 +22,7 @@ cartRouter.post(
 );
 
 cartRouter.get(
-  "/:productId?",
+  "/:customerId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
       const cartId = req.params.cartId;

@@ -22,7 +22,7 @@ customerRouter.post(
 );
 
 customerRouter.get(
-  "/:productId?",
+  "/:customerId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
       const customerId = req.params.customerId;
