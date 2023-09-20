@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { IItem, IProduct } from "../models/Product";
+import Product, { IItem, IProduct } from "../models/Product";
 import { ProductRepository } from "../repositories/ProductRepository";
 import * as amqp from "amqplib";
 
@@ -36,7 +36,12 @@ export class ProductController {
       (message: any) => {
         if (!message) return;
         const item: IItem = JSON.parse(message.content);
-        this.processCartChange(item);
+        try {
+          this.processCartChange(item);
+        } catch(e) {
+          console.error(e);
+        }
+        
         console.log(
           `Received: ${message.content.toString()}`
         );
@@ -47,7 +52,16 @@ export class ProductController {
 
   private processCartChange = async (item: IItem) => {
     const id = new Types.ObjectId(item.productId);
-    const productArray = await this.viewProductById(id);
-    console.log(productArray);
+    const product = await this.viewProductById(id);
+    const stock = product?.stock;
+
+    if (!stock) throw new Error('No product stock found !!!');
+
+    const remainingStock = stock - item.quantity;
+
+    if (remainingStock < 0) throw new Error('Stock is not sufficient !!!');
+    await this.repo.updateProductStock(id, remainingStock);
+
+    console.log('successfully updated the product !!!');
   }
 }

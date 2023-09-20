@@ -18,4 +18,8 @@ export class ProductRepository {
   viewById = async (id: Types.ObjectId) => {
     return await Product.findById(id);
   };
+
+  updateProductStock = async (id: Types.ObjectId, stock: number) => {
+    return await Product.findByIdAndUpdate(id, {stock: stock});
+  }
 }
