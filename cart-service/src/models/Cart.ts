@@ -2,13 +2,14 @@ import { Schema, model } from "mongoose";
 
 export interface ICart {
   uuid: string;
-  items: IProduct[];
+  items: IItem[];
 }
 
-export interface IProduct {
+export interface IItem {
   uuid: string;
   name: string;
   price: number;
+  quantity: number;
 }
 
 const cartSchema = new Schema<ICart>({
@@ -18,6 +19,7 @@ const cartSchema = new Schema<ICart>({
       uuid: { type: String, required: true },
       name: { type: String, required: true },
       price: { type: Number, required: true },
+      quantity: { type: Number },
     },
   ],
 });
