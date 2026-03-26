@@ -1,0 +1,37 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your e-commerce microservices are being deployed with the following components:
+
+{{- if .Values.cartService.enabled }}
+  - Cart Service (port {{ .Values.cartService.containerPort }})
+{{- end }}
+{{- if .Values.customerService.enabled }}
+  - Customer Service (port {{ .Values.customerService.containerPort }})
+{{- end }}
+{{- if .Values.orderService.enabled }}
+  - Order Service (port {{ .Values.orderService.containerPort }})
+{{- end }}
+{{- if .Values.productService.enabled }}
+  - Product Service (port {{ .Values.productService.containerPort }})
+{{- end }}
+{{- if .Values.rabbitmq.enabled }}
+  - RabbitMQ (AMQP: {{ .Values.rabbitmq.service.amqpPort }}, Management: {{ .Values.rabbitmq.service.managementPort }})
+{{- end }}
+
+To check the status of your deployment:
+  kubectl get pods -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+{{- if .Values.ingress.enabled }}
+
+Access your services via ingress:
+  {{- range .Values.ingress.hosts }}
+  http://{{ .host }}
+  {{- end }}
+{{- else }}
+
+To access services locally, use port-forward:
+  kubectl port-forward svc/{{ include "ecommerce.fullname" . }}-cart-service 8001:80
+  kubectl port-forward svc/{{ include "ecommerce.fullname" . }}-customer-service 8002:80
+  kubectl port-forward svc/{{ include "ecommerce.fullname" . }}-order-service 8003:80
+  kubectl port-forward svc/{{ include "ecommerce.fullname" . }}-product-service 8004:80
+{{- end }}

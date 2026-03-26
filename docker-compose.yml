@@ -57,5 +57,13 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  product-reviews-service:
+    build:
+      context: ./product-reviews-service
+    ports:
+      - "8005:3007"
+    networks:
+      - monorepo_network
+
 networks:
   monorepo_network:

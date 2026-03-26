@@ -20,6 +20,7 @@ RUN npm run build
 
 # Expose the port that your application will run on
 EXPOSE 3006
+EXPOSE 9464
 
 # Define the command to run your application
 CMD ["node", "dist/app.js"]

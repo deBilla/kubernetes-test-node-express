@@ -1,0 +1,22 @@
+{{- if .Values.productReviewsService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-product-reviews-service
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: product-reviews-service
+spec:
+  type: {{ .Values.productReviewsService.service.type }}
+  ports:
+    - port: {{ .Values.productReviewsService.service.port }}
+      targetPort: {{ .Values.productReviewsService.containerPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.metricsPort }}
+      targetPort: {{ .Values.metricsPort }}
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "product-reviews-service" "release" .Release.Name) | nindent 4 }}
+{{- end }}

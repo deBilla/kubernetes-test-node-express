@@ -1,0 +1,22 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-order-service
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: order-service
+spec:
+  type: {{ .Values.orderService.service.type }}
+  ports:
+    - port: {{ .Values.orderService.service.port }}
+      targetPort: {{ .Values.orderService.containerPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.metricsPort }}
+      targetPort: {{ .Values.metricsPort }}
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "order-service" "release" .Release.Name) | nindent 4 }}
+{{- end }}

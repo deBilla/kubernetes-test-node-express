@@ -1,0 +1,22 @@
+{{- if .Values.rabbitmq.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-rabbitmq
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: rabbitmq
+spec:
+  type: {{ .Values.rabbitmq.service.type }}
+  ports:
+    - port: {{ .Values.rabbitmq.service.amqpPort }}
+      targetPort: 5672
+      protocol: TCP
+      name: amqp
+    - port: {{ .Values.rabbitmq.service.managementPort }}
+      targetPort: 15672
+      protocol: TCP
+      name: management
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "rabbitmq" "release" .Release.Name) | nindent 4 }}
+{{- end }}

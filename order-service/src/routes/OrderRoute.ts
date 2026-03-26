@@ -16,7 +16,7 @@ orderRouter.post(
       return res.status(201).json(savedOrder);
     } catch (error) {
       console.error(error);
-      return res.status(500).json(error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );
@@ -36,7 +36,7 @@ orderRouter.get(
       }
     } catch (error) {
       console.error(error);
-      return res.status(500).json(error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );

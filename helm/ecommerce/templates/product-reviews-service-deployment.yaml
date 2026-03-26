@@ -1,0 +1,78 @@
+{{- if .Values.productReviewsService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-product-reviews-service
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: product-reviews-service
+spec:
+  replicas: {{ .Values.productReviewsService.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "name" "product-reviews-service" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ecommerce.selectorLabels" (dict "name" "product-reviews-service" "release" .Release.Name) | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: product-reviews-service
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          image: "{{ .Values.productReviewsService.image.repository }}:{{ .Values.productReviewsService.image.tag }}"
+          imagePullPolicy: {{ .Values.productReviewsService.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.productReviewsService.containerPort }}
+              protocol: TCP
+            - containerPort: {{ .Values.metricsPort }}
+              protocol: TCP
+              name: metrics
+          env:
+            - name: PORT
+              value: {{ .Values.productReviewsService.containerPort | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: "product-reviews-service"
+            {{- if .Values.mongodb.uri }}
+            - name: DB_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "ecommerce.fullname" . }}-config
+                  key: DB_URI
+            {{- end }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ecommerce.fullname" . }}-mongodb
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ecommerce.fullname" . }}-mongodb
+                  key: DB_PASSWORD
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ecommerce.fullname" . }}-mongodb
+                  key: DB_URL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.productReviewsService.containerPort }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.productReviewsService.containerPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.productReviewsService.resources | nindent 12 }}
+{{- end }}

@@ -16,7 +16,7 @@ cartRouter.post(
       return res.status(201).json(savedCart);
     } catch (error) {
       console.error(error);
-      return res.status(500).json(error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );
@@ -33,7 +33,7 @@ cartRouter.put(
       return res.status(201).json(savedCart);
     } catch (error) {
       console.error(error);
-      return res.status(500).json(error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );
@@ -49,12 +49,12 @@ cartRouter.get(
         const product = await cartController.viewCartById(id);
         return res.status(200).json(product);
       } else {
-        const allProducts = await cartController.viewAllcarts();
+        const allProducts = await cartController.viewAllCarts();
         return res.status(200).json(allProducts);
       }
     } catch (error) {
       console.error(error);
-      return res.status(500).json(error);
+      return res.status(500).json({ error: "Internal server error" });
     }
   }
 );

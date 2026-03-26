@@ -1,0 +1,155 @@
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+
+mongodb:
+  # Set uri for direct connection (e.g., local MongoDB), or use user/password/url for Atlas
+  uri: ""
+  user: ""
+  password: ""
+  url: ""
+
+rabbitmq:
+  enabled: true
+  replicas: 1
+  image:
+    repository: rabbitmq
+    tag: 3-management
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    amqpPort: 5672
+    managementPort: 15672
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+
+metricsPort: 9464
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+
+cartService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: debilla/node-cart-service-test
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3003
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+customerService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: debilla/node-customer-service-test
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3004
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+orderService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: debilla/node-order-service-test
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3005
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+productService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: debilla/node-product-service-test
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3006
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+productReviewsService:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: debilla/node-product-reviews-service-test
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3007
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: ecommerce.local
+      paths:
+        - path: /cart
+          service: cart-service
+        - path: /customers
+          service: customer-service
+        - path: /orders
+          service: order-service
+        - path: /products
+          service: product-service
+        - path: /reviews
+          service: product-reviews-service
+  tls: []

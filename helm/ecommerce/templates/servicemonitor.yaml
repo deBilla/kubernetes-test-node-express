@@ -1,0 +1,25 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+{{- $services := list "cart-service" "customer-service" "order-service" "product-service" "product-reviews-service" }}
+{{- range $services }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "ecommerce.fullname" $ }}-{{ . }}
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ . }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ . }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  endpoints:
+    - port: metrics
+      interval: {{ $.Values.monitoring.serviceMonitor.interval | default "15s" }}
+      path: /metrics
+  namespaceSelector:
+    matchNames:
+      - {{ $.Release.Namespace }}
+{{- end }}
+{{- end }}

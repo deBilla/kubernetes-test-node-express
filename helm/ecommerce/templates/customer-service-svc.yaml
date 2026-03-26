@@ -1,0 +1,22 @@
+{{- if .Values.customerService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-customer-service
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: customer-service
+spec:
+  type: {{ .Values.customerService.service.type }}
+  ports:
+    - port: {{ .Values.customerService.service.port }}
+      targetPort: {{ .Values.customerService.containerPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.metricsPort }}
+      targetPort: {{ .Values.metricsPort }}
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "customer-service" "release" .Release.Name) | nindent 4 }}
+{{- end }}

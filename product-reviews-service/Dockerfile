@@ -4,8 +4,6 @@ FROM node:20-alpine
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
-ENV rabbitMQHost=rabbitmq
-
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
@@ -19,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port that your application will run on
-EXPOSE 3003
+EXPOSE 3007
 EXPOSE 9464
 
 # Define the command to run your application

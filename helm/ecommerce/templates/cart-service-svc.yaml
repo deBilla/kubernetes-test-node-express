@@ -1,0 +1,22 @@
+{{- if .Values.cartService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-cart-service
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: cart-service
+spec:
+  type: {{ .Values.cartService.service.type }}
+  ports:
+    - port: {{ .Values.cartService.service.port }}
+      targetPort: {{ .Values.cartService.containerPort }}
+      protocol: TCP
+      name: http
+    - port: {{ .Values.metricsPort }}
+      targetPort: {{ .Values.metricsPort }}
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "cart-service" "release" .Release.Name) | nindent 4 }}
+{{- end }}

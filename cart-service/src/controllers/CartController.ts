@@ -15,12 +15,12 @@ export class CartController {
   };
 
   addItemToCart = async (item: IItem, cartId: Types.ObjectId) => {
-    const cart = this.viewCartById(cartId);
+    const cart = await this.viewCartById(cartId);
     await this.publishCartCreatedEvent(item);
     return cart;
   };
 
-  viewAllcarts = async () => {
+  viewAllCarts = async () => {
     return await this.repo.viewAll();
   };
 
