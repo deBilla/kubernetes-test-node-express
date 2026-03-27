@@ -10,7 +10,8 @@ reviewRouter.post(
   "/",
   async (req: Request, res: Response): Promise<Response> => {
     try {
-      const review: IReview = req.body;
+      const tenantId = (req as any).tenantId;
+      const review: IReview = { ...req.body, tenantId };
       const savedReview = await reviewController.saveReview(review);
       return res.status(201).json(savedReview);
     } catch (error) {
@@ -24,8 +25,9 @@ reviewRouter.get(
   "/product/:productId",
   async (req: Request, res: Response): Promise<Response> => {
     try {
+      const tenantId = (req as any).tenantId;
       const productId = req.params.productId;
-      const reviews = await reviewController.viewReviewsByProductId(productId);
+      const reviews = await reviewController.viewReviewsByProductId(productId, tenantId);
       return res.status(200).json(reviews);
     } catch (error) {
       console.error(error);
@@ -38,13 +40,14 @@ reviewRouter.get(
   "/:reviewId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
+      const tenantId = (req as any).tenantId;
       const reviewId = req.params.reviewId;
       if (reviewId) {
         const id = new Types.ObjectId(reviewId);
-        const review = await reviewController.viewReviewById(id);
+        const review = await reviewController.viewReviewById(id, tenantId);
         return res.status(200).json(review);
       } else {
-        const allReviews = await reviewController.viewAllReviews();
+        const allReviews = await reviewController.viewAllReviews(tenantId);
         return res.status(200).json(allReviews);
       }
     } catch (error) {

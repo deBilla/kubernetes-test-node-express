@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 
 export interface ICart {
+  tenantId: string;
   uuid: string;
   items: IItem[];
 }
@@ -13,6 +14,7 @@ export interface IItem {
 }
 
 const cartSchema = new Schema<ICart>({
+  tenantId: { type: String, required: true },
   items: [
     {
       uuid: { type: String, required: true },

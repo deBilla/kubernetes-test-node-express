@@ -13,8 +13,9 @@ describe("ReviewRepository", () => {
   });
 
   describe("save", () => {
-    it("should save a new review and return it", async () => {
+    it("should save a new review with tenantId and return it", async () => {
       const reviewData = {
+        tenantId: "tenant-a",
         productId: "prod123",
         customerId: "cust456",
         rating: 5,
@@ -32,41 +33,41 @@ describe("ReviewRepository", () => {
   });
 
   describe("viewAll", () => {
-    it("should return all reviews", async () => {
+    it("should return all reviews filtered by tenantId", async () => {
       const mockReviews = [
-        { productId: "prod1", rating: 5 },
-        { productId: "prod2", rating: 3 },
+        { tenantId: "tenant-a", productId: "prod1", rating: 5 },
+        { tenantId: "tenant-a", productId: "prod2", rating: 3 },
       ];
       (Review.find as jest.Mock).mockResolvedValue(mockReviews);
 
-      const result = await repo.viewAll();
-      expect(Review.find).toHaveBeenCalled();
+      const result = await repo.viewAll("tenant-a");
+      expect(Review.find).toHaveBeenCalledWith({ tenantId: "tenant-a" });
       expect(result).toEqual(mockReviews);
     });
   });
 
   describe("viewById", () => {
-    it("should return a review by its ID", async () => {
-      const mockReview = { productId: "prod1", rating: 4 };
+    it("should return a review by its ID and tenantId", async () => {
+      const mockReview = { tenantId: "tenant-a", productId: "prod1", rating: 4 };
       const id = new Types.ObjectId();
-      (Review.findById as jest.Mock).mockResolvedValue(mockReview);
+      (Review.findOne as jest.Mock).mockResolvedValue(mockReview);
 
-      const result = await repo.viewById(id);
-      expect(Review.findById).toHaveBeenCalledWith(id);
+      const result = await repo.viewById(id, "tenant-a");
+      expect(Review.findOne).toHaveBeenCalledWith({ _id: id, tenantId: "tenant-a" });
       expect(result).toEqual(mockReview);
     });
   });
 
   describe("viewByProductId", () => {
-    it("should return all reviews for a given product", async () => {
+    it("should return all reviews for a given product and tenant", async () => {
       const mockReviews = [
-        { productId: "prod1", rating: 5 },
-        { productId: "prod1", rating: 3 },
+        { tenantId: "tenant-a", productId: "prod1", rating: 5 },
+        { tenantId: "tenant-a", productId: "prod1", rating: 3 },
       ];
       (Review.find as jest.Mock).mockResolvedValue(mockReviews);
 
-      const result = await repo.viewByProductId("prod1");
-      expect(Review.find).toHaveBeenCalledWith({ productId: "prod1" });
+      const result = await repo.viewByProductId("prod1", "tenant-a");
+      expect(Review.find).toHaveBeenCalledWith({ productId: "prod1", tenantId: "tenant-a" });
       expect(result).toEqual(mockReviews);
     });
   });

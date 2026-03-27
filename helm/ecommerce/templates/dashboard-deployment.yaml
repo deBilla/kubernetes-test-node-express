@@ -1,0 +1,57 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-dashboard
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: dashboard
+spec:
+  replicas: {{ .Values.dashboard.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce.selectorLabels" (dict "name" "dashboard" "release" .Release.Name) | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.linkerd.enabled }}
+      annotations:
+        linkerd.io/inject: enabled
+      {{- end }}
+      labels:
+        {{- include "ecommerce.selectorLabels" (dict "name" "dashboard" "release" .Release.Name) | nindent 8 }}
+    spec:
+      containers:
+        - name: dashboard
+          image: "{{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag }}"
+          imagePullPolicy: {{ .Values.dashboard.image.pullPolicy }}
+          env:
+            - name: PRODUCT_SERVICE_HOST
+              value: {{ include "ecommerce.fullname" . }}-product-service.{{ .Release.Namespace }}.svc.cluster.local
+            - name: CUSTOMER_SERVICE_HOST
+              value: {{ include "ecommerce.fullname" . }}-customer-service.{{ .Release.Namespace }}.svc.cluster.local
+            - name: CART_SERVICE_HOST
+              value: {{ include "ecommerce.fullname" . }}-cart-service.{{ .Release.Namespace }}.svc.cluster.local
+            - name: ORDER_SERVICE_HOST
+              value: {{ include "ecommerce.fullname" . }}-order-service.{{ .Release.Namespace }}.svc.cluster.local
+            - name: REVIEWS_SERVICE_HOST
+              value: {{ include "ecommerce.fullname" . }}-product-reviews-service.{{ .Release.Namespace }}.svc.cluster.local
+            - name: TENANT_NAME
+              value: {{ .Release.Name }}
+          ports:
+            - containerPort: {{ .Values.dashboard.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.dashboard.containerPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.dashboard.containerPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.dashboard.resources | nindent 12 }}
+{{- end }}

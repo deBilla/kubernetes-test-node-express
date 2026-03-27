@@ -1,0 +1,47 @@
+{{- if and .Values.linkerd.enabled .Values.linkerd.authPolicy.enabled }}
+{{- $services := list "cart-service" "customer-service" "order-service" "product-service" "product-reviews-service" }}
+{{- range $services }}
+---
+# Server: defines the port to protect for {{ . }}
+apiVersion: policy.linkerd.io/v1beta3
+kind: Server
+metadata:
+  name: {{ include "ecommerce.fullname" $ }}-{{ . }}
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ . }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  port: http
+---
+# AuthorizationPolicy: only allow traffic from the same namespace
+apiVersion: policy.linkerd.io/v1alpha1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" $ }}-{{ . }}
+  labels:
+    {{- include "ecommerce.labels" $ | nindent 4 }}
+spec:
+  targetRef:
+    group: policy.linkerd.io
+    kind: Server
+    name: {{ include "ecommerce.fullname" $ }}-{{ . }}
+  requiredAuthenticationRefs:
+    - name: {{ include "ecommerce.fullname" $ }}-same-namespace
+      kind: MeshTLSAuthentication
+      group: policy.linkerd.io
+{{- end }}
+---
+# MeshTLSAuthentication: trust only identities from this namespace
+apiVersion: policy.linkerd.io/v1alpha1
+kind: MeshTLSAuthentication
+metadata:
+  name: {{ include "ecommerce.fullname" $ }}-same-namespace
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  identities:
+    - "*.{{ .Release.Namespace }}.serviceaccount.identity.linkerd.cluster.local"
+{{- end }}

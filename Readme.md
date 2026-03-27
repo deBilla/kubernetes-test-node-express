@@ -1,6 +1,6 @@
 # E-Commerce Microservices Backend
 
-A microservices-based e-commerce backend built with Node.js, Express, TypeScript, MongoDB, and RabbitMQ. Deployed on Kubernetes via Helm.
+A multi-tenant, microservices-based e-commerce backend built with Node.js, Express, TypeScript, MongoDB, and RabbitMQ. Deployed on Kubernetes via Helm with Linkerd service mesh, OpenTelemetry observability, and a React ERP dashboard.
 
 ## Services
 
@@ -11,6 +11,7 @@ A microservices-based e-commerce backend built with Node.js, Express, TypeScript
 | Order Service | 3005 | Order management |
 | Product Service | 3006 | Product catalog, consumes cart events from RabbitMQ |
 | Product Reviews Service | 3007 | Product reviews and ratings |
+| Dashboard | 3010 | React ERP dashboard (nginx + reverse proxy) |
 
 ## Prerequisites
 
@@ -20,105 +21,131 @@ A microservices-based e-commerce backend built with Node.js, Express, TypeScript
 - Helm 3+
 - kind (for local Kubernetes)
 
-## Local Development
+## Quick Start (Multi-Tenant)
+
+The fastest way to get everything running with full tenant isolation:
 
 ```bash
-cd <service-name>
-npm install
-npm run dev
-```
-
-## Running Tests
-
-```bash
-cd product-reviews-service
-npm test
-```
-
-## Deploy with Docker Compose
-
-```bash
-docker-compose up --build
-```
-
-## Deploy to Kubernetes (Local with kind)
-
-### 1. Create a kind cluster
-
-```bash
+# 1. Create cluster
 kind create cluster --name ecommerce
-```
 
-### 2. Build and load images
-
-```bash
+# 2. Build and load all images
 docker build -t debilla/node-cart-service-test:latest ./cart-service
 docker build -t debilla/node-customer-service-test:latest ./customer-service
 docker build -t debilla/node-order-service-test:latest ./order-service
 docker build -t debilla/node-product-service-test:latest ./product-service
 docker build -t debilla/node-product-reviews-service-test:latest ./product-reviews-service
+docker build -t debilla/ecommerce-dashboard:latest ./dashboard
 
-kind load docker-image debilla/node-cart-service-test:latest debilla/node-customer-service-test:latest debilla/node-order-service-test:latest debilla/node-product-service-test:latest debilla/node-product-reviews-service-test:latest --name ecommerce
-```
+kind load docker-image debilla/node-cart-service-test:latest \
+  debilla/node-customer-service-test:latest \
+  debilla/node-order-service-test:latest \
+  debilla/node-product-service-test:latest \
+  debilla/node-product-reviews-service-test:latest \
+  debilla/ecommerce-dashboard:latest \
+  --name ecommerce
 
-### 3. Install MongoDB
+# 3. Install Linkerd
+./scripts/install-linkerd.sh
 
-```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install mongodb bitnami/mongodb \
-  --set "auth.databases={ecommerce}" \
-  --set "auth.usernames={ecomuser}" \
-  --set "auth.passwords={ecompass}"
-```
+# 4. Deploy both tenants (Acme Electronics + Fresh Foods)
+./scripts/deploy-tenants.sh
 
-### 4. Deploy the application
-
-```bash
-helm install ecommerce ./helm/ecommerce \
-  --set mongodb.uri="mongodb://ecomuser:ecompass@mongodb.default.svc.cluster.local:27017/ecommerce" \
-  --set cartService.image.pullPolicy=Never \
-  --set customerService.image.pullPolicy=Never \
-  --set orderService.image.pullPolicy=Never \
-  --set productService.image.pullPolicy=Never \
-  --set productReviewsService.image.pullPolicy=Never
-```
-
-### 5. Install monitoring (Prometheus + Grafana)
-
-```bash
+# 5. Install monitoring
 ./scripts/install-monitoring.sh
+
+# 6. Access dashboards
+kubectl port-forward -n tenant-acme svc/acme-ecommerce-dashboard 8080:80
+kubectl port-forward -n tenant-fresh svc/fresh-ecommerce-dashboard 8081:80
 ```
 
-### 6. Run the playground
+- **Acme Electronics**: http://localhost:8080
+- **Fresh Foods**: http://localhost:8081
+
+## Multi-Tenancy
+
+### Namespace-Per-Tenant (Production Model)
+
+Each tenant gets a fully isolated namespace with their own services, database, and message queue. Linkerd enforces mTLS and authorization policies to block cross-tenant communication.
 
 ```bash
-./scripts/playground.sh
+# Deploy both tenants
+./scripts/deploy-tenants.sh
+
+# Verify isolation
+./scripts/test-isolation.sh
 ```
 
-## Accessing Services
+### Header-Based (Application Layer)
+
+All services also support `X-Tenant-Id` header-based isolation at the database level. Every document includes a `tenantId` field and all queries are scoped.
 
 ```bash
-kubectl port-forward svc/ecommerce-cart-service 8001:80
-kubectl port-forward svc/ecommerce-customer-service 8002:80
-kubectl port-forward svc/ecommerce-order-service 8003:80
-kubectl port-forward svc/ecommerce-product-service 8004:80
-kubectl port-forward svc/ecommerce-product-reviews-service 8005:80
+curl -H "X-Tenant-Id: tenant-a" http://localhost:8004/
 ```
 
-## Monitoring
+## React Dashboard
+
+An ERP-style dashboard with:
+- Sidebar navigation (Dashboard, Products, Customers, Carts, Orders, Reviews)
+- Guided workflow: Create Product -> Customer -> Cart -> Add Items -> Order -> Review
+- Full data tables with detail panels
+- Tenant badge showing which tenant the dashboard belongs to
+
+## Service Mesh (Linkerd)
 
 ```bash
-# Prometheus
-kubectl port-forward -n monitoring svc/kube-prometheus-prometheus 9090:9090
+linkerd viz dashboard              # Open dashboard
+linkerd viz stat deploy -n tenant-acme   # View mesh stats
+linkerd viz tap deploy/acme-ecommerce-cart-service -n tenant-acme  # Live traffic
+```
+
+## Monitoring (Prometheus + Grafana)
+
+```bash
+# Install
+./scripts/install-monitoring.sh
 
 # Grafana (admin/admin)
 kubectl port-forward -n monitoring svc/kube-prometheus-grafana 3000:80
 ```
 
+Open http://localhost:3000 -> Dashboards -> **E-Commerce Services** for:
+- Request rate by service
+- P95 latency by service
+- Total requests by route (health probes excluded)
+- Status code distribution
+- Traffic per tenant namespace
+
+## Running Tests
+
+```bash
+cd product-reviews-service
+npm test  # 11 tests
+```
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/deploy-tenants.sh` | Deploy 2 isolated tenants (Acme + Fresh) |
+| `scripts/test-isolation.sh` | Verify cross-tenant isolation |
+| `scripts/install-linkerd.sh` | Install Linkerd CLI + control plane + Viz |
+| `scripts/install-monitoring.sh` | Install Prometheus + Grafana |
+| `scripts/playground.sh` | End-to-end curl test for all services |
+
 ## Architecture
 
-- **Helm Chart**: Centralized deployment at `helm/ecommerce/`
-- **OpenTelemetry**: Auto-instrumented metrics on all services (port 9464, `/metrics`)
-- **RabbitMQ**: Event-driven communication between cart and product services
-- **MongoDB**: Shared database via MongoDB Atlas or local Bitnami Helm chart
-- **Health Checks**: Dedicated `/health` endpoint on all services
+- **Multi-Tenancy**: Namespace-per-tenant with Linkerd mTLS + AuthorizationPolicy + NetworkPolicy
+- **Helm Chart**: Single chart deployed per tenant (`helm/ecommerce/`)
+- **Dashboard**: React + nginx reverse proxy, containerized per tenant
+- **OpenTelemetry**: Auto-instrumented metrics on all services (port 9464)
+- **Linkerd**: Service mesh with mTLS, identity-based auth, traffic observability
+- **RabbitMQ**: Event-driven communication (cart -> product stock updates)
+- **MongoDB**: Isolated instance per tenant (Bitnami Helm chart)
+- **Grafana**: Custom "E-Commerce Services" dashboard with per-tenant traffic views
+- **Health Checks**: Dedicated `/health` endpoint (excluded from metrics)
+
+## Blog Post
+
+See [blog/building-multi-tenant-microservices-on-kubernetes.md](blog/building-multi-tenant-microservices-on-kubernetes.md) for a detailed technical write-up comparing this architecture with Slack, Shopify, and AWS approaches.

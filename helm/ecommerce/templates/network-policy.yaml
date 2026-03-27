@@ -1,0 +1,48 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-tenant-isolation
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from same namespace only
+    - from:
+        - podSelector: {}
+    # Allow Prometheus scraping from monitoring namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: {{ .Values.metricsPort }}
+  egress:
+    # Allow traffic to same namespace
+    - to:
+        - podSelector: {}
+    # Allow DNS resolution (any destination, port 53)
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow traffic to Linkerd control plane
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              linkerd.io/control-plane-ns: linkerd
+    # Allow traffic to Linkerd identity (for mTLS handshake)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8090
+{{- end }}

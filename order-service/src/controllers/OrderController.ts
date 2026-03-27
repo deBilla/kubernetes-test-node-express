@@ -7,15 +7,16 @@ export class OrderController {
   constructor() {
     this.repo = new OrderRepository();
   }
+
   saveOrder = async (order: IOrder) => {
     return await this.repo.save(order);
   };
 
-  viewAllOrders = async () => {
-    return await this.repo.viewAll();
+  viewAllOrders = async (tenantId: string) => {
+    return await this.repo.viewAll(tenantId);
   };
 
-  viewOrderById = async (id: Types.ObjectId) => {
-    return await this.repo.viewById(id);
+  viewOrderById = async (id: Types.ObjectId, tenantId: string) => {
+    return await this.repo.viewById(id, tenantId);
   };
 }

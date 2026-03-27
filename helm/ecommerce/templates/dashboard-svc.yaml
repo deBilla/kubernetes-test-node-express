@@ -1,0 +1,18 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecommerce.fullname" . }}-dashboard
+  labels:
+    {{- include "ecommerce.labels" . | nindent 4 }}
+    app.kubernetes.io/name: dashboard
+spec:
+  type: {{ .Values.dashboard.service.type }}
+  ports:
+    - port: {{ .Values.dashboard.service.port }}
+      targetPort: {{ .Values.dashboard.containerPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ecommerce.selectorLabels" (dict "name" "dashboard" "release" .Release.Name) | nindent 4 }}
+{{- end }}

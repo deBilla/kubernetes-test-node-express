@@ -12,15 +12,15 @@ export class ReviewController {
     return await this.repo.save(review);
   };
 
-  viewAllReviews = async () => {
-    return await this.repo.viewAll();
+  viewAllReviews = async (tenantId: string) => {
+    return await this.repo.viewAll(tenantId);
   };
 
-  viewReviewById = async (id: Types.ObjectId) => {
-    return await this.repo.viewById(id);
+  viewReviewById = async (id: Types.ObjectId, tenantId: string) => {
+    return await this.repo.viewById(id, tenantId);
   };
 
-  viewReviewsByProductId = async (productId: string) => {
-    return await this.repo.viewByProductId(productId);
+  viewReviewsByProductId = async (productId: string, tenantId: string) => {
+    return await this.repo.viewByProductId(productId, tenantId);
   };
 }

@@ -6,16 +6,15 @@ export class CustomerRepository {
 
   save = async (newCustomer: ICustomer) => {
     const customer = new Customer(newCustomer);
-    console.log('saving customer in the repository" ' + customer);
     const saveResult = await customer.save();
     return saveResult;
   };
 
-  viewAll = async () => {
-    return await Customer.find();
+  viewAll = async (tenantId: string) => {
+    return await Customer.find({ tenantId });
   };
 
-  viewById = async (id: Types.ObjectId) => {
-    return await Customer.findById(id);
+  viewById = async (id: Types.ObjectId, tenantId: string) => {
+    return await Customer.findOne({ _id: id, tenantId });
   };
 }

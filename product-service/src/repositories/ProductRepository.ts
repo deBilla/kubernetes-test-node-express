@@ -6,20 +6,19 @@ export class ProductRepository {
 
   save = async (newProduct: IProduct) => {
     const product = new Product(newProduct);
-    console.log('saving user in the repository" ' + product);
     const saveResult = await product.save();
     return saveResult;
   };
 
-  viewAll = async () => {
-    return await Product.find();
+  viewAll = async (tenantId: string) => {
+    return await Product.find({ tenantId });
   };
 
-  viewById = async (id: Types.ObjectId) => {
-    return await Product.findById(id);
+  viewById = async (id: Types.ObjectId, tenantId: string) => {
+    return await Product.findOne({ _id: id, tenantId });
   };
 
   updateProductStock = async (id: Types.ObjectId, stock: number) => {
-    return await Product.findByIdAndUpdate(id, {stock: stock});
-  }
+    return await Product.findByIdAndUpdate(id, { stock: stock });
+  };
 }

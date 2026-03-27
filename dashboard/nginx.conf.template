@@ -1,0 +1,51 @@
+server {
+    listen 3010;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    resolver 10.96.0.10 valid=5s;
+
+    location /api/products/ {
+        set $product_backend "${PRODUCT_SERVICE_HOST}";
+        rewrite ^/api/products/(.*) /$1 break;
+        proxy_pass http://$product_backend;
+        proxy_pass_request_headers on;
+    }
+
+    location /api/customers/ {
+        set $customer_backend "${CUSTOMER_SERVICE_HOST}";
+        rewrite ^/api/customers/(.*) /$1 break;
+        proxy_pass http://$customer_backend;
+        proxy_pass_request_headers on;
+    }
+
+    location /api/carts/ {
+        set $cart_backend "${CART_SERVICE_HOST}";
+        rewrite ^/api/carts/(.*) /$1 break;
+        proxy_pass http://$cart_backend;
+        proxy_pass_request_headers on;
+    }
+
+    location /api/orders/ {
+        set $order_backend "${ORDER_SERVICE_HOST}";
+        rewrite ^/api/orders/(.*) /$1 break;
+        proxy_pass http://$order_backend;
+        proxy_pass_request_headers on;
+    }
+
+    location /api/reviews/ {
+        set $reviews_backend "${REVIEWS_SERVICE_HOST}";
+        rewrite ^/api/reviews/(.*) /$1 break;
+        proxy_pass http://$reviews_backend;
+        proxy_pass_request_headers on;
+    }
+
+    location /api/tenant {
+        default_type application/json;
+        return 200 '{"tenantId":"${TENANT_NAME}"}';
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

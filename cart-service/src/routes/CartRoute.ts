@@ -10,8 +10,8 @@ cartRouter.post(
   "/",
   async (req: Request, res: Response): Promise<Response> => {
     try {
-      const cart: ICart = req.body;
-      console.log(req.body);
+      const tenantId = (req as any).tenantId;
+      const cart: ICart = { ...req.body, tenantId };
       const savedCart = await cartController.saveCart(cart);
       return res.status(201).json(savedCart);
     } catch (error) {
@@ -25,11 +25,11 @@ cartRouter.put(
   "/addItem/:cartId",
   async (req: Request, res: Response): Promise<Response> => {
     try {
+      const tenantId = (req as any).tenantId;
       const item: IItem = req.body;
       const cartId = req.params.cartId;
       const id = new Types.ObjectId(cartId);
-      console.log(req.body);
-      const savedCart = await cartController.addItemToCart(item, id);
+      const savedCart = await cartController.addItemToCart(item, id, tenantId);
       return res.status(201).json(savedCart);
     } catch (error) {
       console.error(error);
@@ -42,15 +42,15 @@ cartRouter.get(
   "/:cartId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
+      const tenantId = (req as any).tenantId;
       const cartId = req.params.cartId;
-
       if (cartId) {
         const id = new Types.ObjectId(cartId);
-        const product = await cartController.viewCartById(id);
-        return res.status(200).json(product);
+        const cart = await cartController.viewCartById(id, tenantId);
+        return res.status(200).json(cart);
       } else {
-        const allProducts = await cartController.viewAllCarts();
-        return res.status(200).json(allProducts);
+        const allCarts = await cartController.viewAllCarts(tenantId);
+        return res.status(200).json(allCarts);
       }
     } catch (error) {
       console.error(error);

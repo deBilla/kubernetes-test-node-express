@@ -13,6 +13,14 @@ spec:
       {{- include "ecommerce.selectorLabels" (dict "name" "product-reviews-service" "release" .Release.Name) | nindent 6 }}
   template:
     metadata:
+      {{- if .Values.linkerd.enabled }}
+      annotations:
+        linkerd.io/inject: enabled
+        config.linkerd.io/skip-inbound-ports: "{{ $.Values.metricsPort }}"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ $.Values.metricsPort }}"
+        prometheus.io/path: "/metrics"
+      {{- end }}
       labels:
         {{- include "ecommerce.selectorLabels" (dict "name" "product-reviews-service" "release" .Release.Name) | nindent 8 }}
     spec:

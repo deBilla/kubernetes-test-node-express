@@ -8,16 +8,17 @@ export class ProductController {
   constructor() {
     this.repo = new ProductRepository();
   }
+
   saveProduct = async (product: IProduct) => {
     return await this.repo.save(product);
   };
 
-  viewAllProducts = async () => {
-    return await this.repo.viewAll();
+  viewAllProducts = async (tenantId: string) => {
+    return await this.repo.viewAll(tenantId);
   };
 
-  viewProductById = async (id: Types.ObjectId) => {
-    return await this.repo.viewById(id);
+  viewProductById = async (id: Types.ObjectId, tenantId: string) => {
+    return await this.repo.viewById(id, tenantId);
   };
 
   consumeCartEvent = async () => {
@@ -38,13 +39,11 @@ export class ProductController {
         const item: IItem = JSON.parse(message.content);
         try {
           this.processCartChange(item);
-        } catch(e) {
+        } catch (e) {
           console.error(e);
         }
-        
-        console.log(
-          `Received: ${message.content.toString()}`
-        );
+
+        console.log(`Received: ${message.content.toString()}`);
       },
       { noAck: true }
     );
@@ -52,16 +51,16 @@ export class ProductController {
 
   private processCartChange = async (item: IItem) => {
     const id = new Types.ObjectId(item.productId);
-    const product = await this.viewProductById(id);
+    const product = await this.repo.viewById(id, "");
     const stock = product?.stock;
 
-    if (!stock) throw new Error('No product stock found !!!');
+    if (!stock) throw new Error("No product stock found !!!");
 
     const remainingStock = stock - item.quantity;
 
-    if (remainingStock < 0) throw new Error('Stock is not sufficient !!!');
+    if (remainingStock < 0) throw new Error("Stock is not sufficient !!!");
     await this.repo.updateProductStock(id, remainingStock);
 
-    console.log('successfully updated the product !!!');
-  }
+    console.log("successfully updated the product !!!");
+  };
 }

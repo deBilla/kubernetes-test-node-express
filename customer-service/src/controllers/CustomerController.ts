@@ -7,15 +7,16 @@ export class CustomerController {
   constructor() {
     this.repo = new CustomerRepository();
   }
+
   saveCustomer = async (customer: ICustomer) => {
     return await this.repo.save(customer);
   };
 
-  viewAllCustomers = async () => {
-    return await this.repo.viewAll();
+  viewAllCustomers = async (tenantId: string) => {
+    return await this.repo.viewAll(tenantId);
   };
 
-  viewCustomerById = async (id: Types.ObjectId) => {
-    return await this.repo.viewById(id);
+  viewCustomerById = async (id: Types.ObjectId, tenantId: string) => {
+    return await this.repo.viewById(id, tenantId);
   };
 }

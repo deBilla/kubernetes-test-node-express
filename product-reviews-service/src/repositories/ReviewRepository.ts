@@ -10,15 +10,15 @@ export class ReviewRepository {
     return saveResult;
   };
 
-  viewAll = async () => {
-    return await Review.find();
+  viewAll = async (tenantId: string) => {
+    return await Review.find({ tenantId });
   };
 
-  viewById = async (id: Types.ObjectId) => {
-    return await Review.findById(id);
+  viewById = async (id: Types.ObjectId, tenantId: string) => {
+    return await Review.findOne({ _id: id, tenantId });
   };
 
-  viewByProductId = async (productId: string) => {
-    return await Review.find({ productId });
+  viewByProductId = async (productId: string, tenantId: string) => {
+    return await Review.find({ productId, tenantId });
   };
 }

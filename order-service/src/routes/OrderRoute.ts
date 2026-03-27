@@ -10,8 +10,8 @@ orderRouter.post(
   "/",
   async (req: Request, res: Response): Promise<Response> => {
     try {
-      const order: IOrder = req.body;
-      console.log(req.body);
+      const tenantId = (req as any).tenantId;
+      const order: IOrder = { ...req.body, tenantId };
       const savedOrder = await orderController.saveOrder(order);
       return res.status(201).json(savedOrder);
     } catch (error) {
@@ -25,13 +25,14 @@ orderRouter.get(
   "/:orderId?",
   async (req: Request, res: Response): Promise<Response> => {
     try {
+      const tenantId = (req as any).tenantId;
       const orderId = req.params.orderId;
       if (orderId) {
         const id = new Types.ObjectId(orderId);
-        const order = await orderController.viewOrderById(id);
+        const order = await orderController.viewOrderById(id, tenantId);
         return res.status(200).json(order);
       } else {
-        const allOrders = await orderController.viewAllOrders();
+        const allOrders = await orderController.viewAllOrders(tenantId);
         return res.status(200).json(allOrders);
       }
     } catch (error) {

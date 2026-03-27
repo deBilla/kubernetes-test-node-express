@@ -2,6 +2,14 @@ global:
   imageRegistry: ""
   imagePullSecrets: []
 
+linkerd:
+  enabled: true
+  authPolicy:
+    enabled: false
+
+networkPolicy:
+  enabled: false
+
 mongodb:
   # Set uri for direct connection (e.g., local MongoDB), or use user/password/url for Atlas
   uri: ""
@@ -134,6 +142,25 @@ productReviewsService:
     limits:
       cpu: 250m
       memory: 256Mi
+
+dashboard:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: debilla/ecommerce-dashboard
+    tag: latest
+    pullPolicy: IfNotPresent
+  containerPort: 3010
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
 
 ingress:
   enabled: false

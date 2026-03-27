@@ -14,18 +14,18 @@ export class CartController {
     return newCart;
   };
 
-  addItemToCart = async (item: IItem, cartId: Types.ObjectId) => {
-    const cart = await this.viewCartById(cartId);
+  addItemToCart = async (item: IItem, cartId: Types.ObjectId, tenantId: string) => {
+    const updatedCart = await this.repo.addItem(cartId, tenantId, item);
     await this.publishCartCreatedEvent(item);
-    return cart;
+    return updatedCart;
   };
 
-  viewAllCarts = async () => {
-    return await this.repo.viewAll();
+  viewAllCarts = async (tenantId: string) => {
+    return await this.repo.viewAll(tenantId);
   };
 
-  viewCartById = async (id: Types.ObjectId) => {
-    return await this.repo.viewById(id);
+  viewCartById = async (id: Types.ObjectId, tenantId: string) => {
+    return await this.repo.viewById(id, tenantId);
   };
 
   publishCartCreatedEvent = async (item: IItem) => {

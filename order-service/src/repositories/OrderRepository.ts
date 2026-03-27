@@ -6,16 +6,15 @@ export class OrderRepository {
 
   save = async (newOrder: IOrder) => {
     const order = new Order(newOrder);
-    console.log('saving user in the repository" ' + order);
     const saveResult = await order.save();
     return saveResult;
   };
 
-  viewAll = async () => {
-    return await Order.find();
+  viewAll = async (tenantId: string) => {
+    return await Order.find({ tenantId });
   };
 
-  viewById = async (id: Types.ObjectId) => {
-    return await Order.findById(id);
+  viewById = async (id: Types.ObjectId, tenantId: string) => {
+    return await Order.findOne({ _id: id, tenantId });
   };
 }

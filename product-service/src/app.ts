@@ -4,6 +4,7 @@ import { ConnectOptions, connect } from "mongoose";
 import bodyParser from "body-parser";
 import { configDotenv } from "dotenv";
 import productRouter from "./routes/ProductRoute";
+import { tenantMiddleware } from "./middleware/tenantMiddleware";
 import { ProductController } from "./controllers/ProductController";
 configDotenv();
 const app = express();
@@ -12,6 +13,7 @@ const port = process.env.PORT || 3000;
 async function run() {
   app.use(bodyParser.json());
   app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+  app.use(tenantMiddleware);
   app.use(productRouter);
 
   const connectionOptions: ConnectOptions = {};
